@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тренажёр поведенческого интервью</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+
+:root {
+  --navy:  #2F4156;
+  --teal:  #567C8D;
+  --sky:   #C8D9E6;
+  --beige: #F5EFEB;
+  --white: #FFFFFF;
+  --font: 'Montserrat', sans-serif;
+  --r-sm: 8px; --r-md: 12px; --r-lg: 18px; --r-full: 9999px;
+  --sh-sm: 0 2px 10px rgba(47,65,86,0.09);
+  --sh-md: 0 6px 24px rgba(47,65,86,0.15);
+  --tr: 220ms cubic-bezier(0.16,1,0.3,1);
+}
+
+body { font-family: var(--font); font-size: 15px; color: var(--navy); background: var(--white); min-height: 100dvh; line-height: 1.6; }
+
+/* ── LANDING ── */
+#landing { display: flex; flex-direction: column; align-items: center; padding: 52px 20px 60px; min-height: 100dvh; }
+
+.landing-header { text-align: center; margin-bottom: 48px; max-width: 680px; }
+.landing-header h1 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700; color: var(--navy); line-height: 1.25; margin-bottom: 12px; }
+.landing-header p { font-size: 14px; color: var(--teal); max-width: 54ch; margin: 0 auto; }
+
+.sim-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(276px, 1fr)); gap: 20px; max-width: 960px; width: 100%; }
+
+.sim-card {
+  background: var(--sky); border-radius: var(--r-lg); padding: 28px 24px 24px;
+  cursor: pointer; display: flex; flex-direction: column; gap: 14px;
+  box-shadow: var(--sh-sm); transition: transform var(--tr), box-shadow var(--tr), background var(--tr);
+}
+.sim-card:hover { transform: translateY(-3px); box-shadow: var(--sh-md); background: #b8ccdc; }
+.sim-card:active { transform: translateY(-1px); }
+
+.card-top { display: flex; align-items: center; gap: 14px; }
+.card-avatar { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.7); }
+.card-label { display: flex; flex-direction: column; gap: 3px; }
+.card-num { font-size: 11px; font-weight: 700; color: var(--teal); letter-spacing: 0.07em; text-transform: uppercase; }
+.card-title { font-size: 15px; font-weight: 700; color: var(--navy); line-height: 1.3; }
+
+.card-meta { display: flex; flex-direction: column; gap: 5px; }
+.card-meta-row { font-size: 13px; color: var(--navy); }
+.card-meta-row b { font-weight: 700; }
+
+.card-task { background: rgba(255,255,255,0.52); border-radius: var(--r-sm); padding: 10px 14px; font-size: 13px; color: var(--navy); line-height: 1.5; }
+.card-task b { font-weight: 700; }
+
+.card-btn {
+  align-self: flex-start; background: var(--navy); color: var(--white);
+  border: none; border-radius: var(--r-full); padding: 9px 22px;
+  font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer;
+  letter-spacing: 0.02em; transition: background var(--tr), transform var(--tr); margin-top: 2px;
+}
+.card-btn:hover { background: var(--teal); }
+.card-btn:active { transform: scale(0.97); }
+
+/* ── SIMULATOR ── */
+#simulator { display: none; flex-direction: column; min-height: 100dvh; }
+#simulator.on { display: flex; }
+
+.sim-bar {
+  background: var(--sky); padding: 13px 24px;
+  display: flex; align-items: center; gap: 14px;
+  border-bottom: 1px solid rgba(47,65,86,0.1);
+  position: sticky; top: 0; z-index: 10; flex-wrap: wrap;
+}
+.back-btn {
+  background: none; border: none; font-family: var(--font); font-size: 13px; font-weight: 600;
+  color: var(--teal); cursor: pointer; padding: 5px 10px 5px 0;
+  display: flex; align-items: center; gap: 5px; transition: color var(--tr);
+}
+.back-btn:hover { color: var(--navy); }
+.back-btn svg { width: 15px; height: 15px; }
+
+.bar-title { font-size: 14px; font-weight: 700; color: var(--navy); flex: 1; }
+
+.prog-wrap { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.prog-dots { display: flex; gap: 5px; }
+.prog-dot { width: 30px; height: 7px; border-radius: 4px; background: rgba(47,65,86,0.15); transition: background var(--tr); }
+.prog-dot.g { background: #3a9c4f; }
+.prog-dot.y { background: #d4a017; }
+.prog-dot.r { background: #c0392b; }
+
+.mood { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: var(--white); transition: background var(--tr); }
+.mood.g { background: #3a9c4f; }
+.mood.y { background: #d4a017; }
+.mood.r { background: #c0392b; }
+
+.sim-stage {
+  flex: 1;
+  background: linear-gradient(rgba(232,239,245,0.72), rgba(232,239,245,0.72)),
+    url("https://images.unsplash.com/photo-1497366216548-37526070297c?w=1400&q=60") center/cover no-repeat;
+  padding: 28px 20px 120px; display: flex; flex-direction: column;
+}
+
+.dialog { max-width: 720px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+
+.step-lbl { text-align: center; font-size: 11px; font-weight: 700; color: var(--teal); letter-spacing: 0.07em; text-transform: uppercase; }
+
+.hint-wrap {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: rgba(255,255,255,0.93); border-radius: var(--r-md);
+  padding: 15px; box-shadow: var(--sh-sm); border-left: 3px solid var(--navy);
+  opacity: 0; transform: translateY(8px); transition: opacity .35s ease, transform .35s ease;
+}
+.hint-wrap.vis { opacity: 1; transform: none; }
+.hint-av { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.hint-body { font-size: 13px; color: var(--navy); line-height: 1.6; }
+.hint-name { font-size: 11px; font-weight: 700; color: var(--teal); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+
+.cand-row {
+  display: flex; justify-content: flex-end; align-items: flex-start; gap: 12px;
+  opacity: 0; transform: translateX(10px); transition: opacity .35s ease .1s, transform .35s ease .1s;
+}
+.cand-row.vis { opacity: 1; transform: none; }
+.cand-bubble { background: var(--white); border-radius: 16px 4px 16px 16px; padding: 13px 16px; max-width: 75%; font-size: 14px; line-height: 1.6; color: var(--navy); box-shadow: var(--sh-sm); }
+.cand-av { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+
+.ans-panel {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(255,255,255,0.97); border-top: 1px solid rgba(47,65,86,0.1);
+  padding: 12px 20px 20px; z-index: 20; backdrop-filter: blur(10px); transition: opacity .25s ease;
+}
+.ans-lbl { font-size: 11px; font-weight: 700; color: var(--teal); letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 8px; text-align: center; }
+.ans-list { display: flex; flex-direction: column; gap: 6px; max-width: 720px; margin: 0 auto; }
+.ans-btn {
+  background: var(--sky); border: none; border-radius: var(--r-md);
+  padding: 10px 15px; font-family: var(--font); font-size: 13px; font-weight: 500;
+  color: var(--navy); cursor: pointer; text-align: left;
+  display: flex; align-items: center; gap: 10px; line-height: 1.4;
+  transition: background var(--tr), box-shadow var(--tr), transform var(--tr);
+}
+.ans-btn:hover { background: var(--beige); box-shadow: var(--sh-sm); }
+.ans-btn:active { background: #e0d5c8; transform: scale(0.99); }
+.ans-num { width: 22px; height: 22px; border-radius: 50%; background: rgba(47,65,86,0.13); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+
+/* ── FEEDBACK ── */
+.fb-overlay {
+  position: fixed; inset: 0; background: rgba(47,65,86,0.45); z-index: 30;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  opacity: 0; pointer-events: none; transition: opacity .3s ease;
+}
+.fb-overlay.vis { opacity: 1; pointer-events: all; }
+.fb-card {
+  background: var(--white); border-radius: var(--r-lg); padding: 26px 22px;
+  max-width: 520px; width: 100%; box-shadow: var(--sh-md);
+  display: flex; flex-direction: column; gap: 14px;
+  transform: scale(.95) translateY(8px); transition: transform .3s ease;
+}
+.fb-overlay.vis .fb-card { transform: scale(1) translateY(0); }
+
+.fb-top { display: flex; gap: 14px; align-items: flex-start; }
+.fb-alex { display: flex; flex-direction: column; align-items: center; gap: 3px; flex-shrink: 0; }
+.fb-alex img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+.fb-alex span { font-size: 10px; font-weight: 700; color: var(--teal); }
+.fb-right { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+
+.fb-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: var(--r-full); width: fit-content; }
+.fb-tag.ok { background: #e8f5eb; color: #2d7a3a; }
+.fb-tag.err { background: #fdf0f0; color: #8b2222; }
+.fb-tag svg { width: 12px; height: 12px; }
+
+.fb-chosen { font-size: 13px; font-weight: 600; color: var(--navy); line-height: 1.4; }
+.fb-text { font-size: 14px; color: var(--navy); line-height: 1.65; }
+
+.fb-acts { display: flex; flex-direction: column; gap: 7px; }
+.fb-next { background: var(--navy); color: var(--white); border: none; border-radius: var(--r-full); padding: 11px 22px; font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; transition: background var(--tr); }
+.fb-next:hover { background: var(--teal); }
+.fb-retry { background: none; border: 2px solid var(--sky); border-radius: var(--r-full); padding: 9px 22px; font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; color: var(--teal); text-align: center; transition: border-color var(--tr), color var(--tr); }
+.fb-retry:hover { border-color: var(--teal); color: var(--navy); }
+
+/* ── RESULT ── */
+#result { display: none; flex-direction: column; align-items: center; padding: 60px 20px; min-height: 100dvh; background: var(--white); }
+#result.on { display: flex; }
+.res-inner { max-width: 560px; width: 100%; display: flex; flex-direction: column; gap: 22px; align-items: center; text-align: center; }
+.res-title { font-size: clamp(1.3rem, 3vw, 1.75rem); font-weight: 700; color: var(--navy); }
+.res-sub { font-size: 14px; color: var(--teal); max-width: 50ch; }
+.res-score { font-size: 34px; font-weight: 700; color: var(--navy); }
+.res-score span { font-size: 15px; font-weight: 400; color: var(--teal); }
+.res-box { background: var(--sky); border-radius: var(--r-lg); padding: 22px; width: 100%; text-align: left; display: flex; flex-direction: column; gap: 10px; }
+.res-box h3 { font-size: 13px; font-weight: 700; color: var(--navy); }
+.res-box ul { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+.res-box li { font-size: 13px; color: var(--navy); padding-left: 16px; position: relative; line-height: 1.5; }
+.res-box li::before { content: "—"; position: absolute; left: 0; color: var(--teal); }
+.res-key { background: rgba(47,65,86,0.06); border-radius: var(--r-md); padding: 14px 16px; font-size: 13px; font-style: italic; color: var(--navy); line-height: 1.65; border-left: 3px solid var(--navy); text-align: left; width: 100%; }
+.res-key b { font-style: normal; font-weight: 700; }
+.res-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.res-btn-p { background: var(--navy); color: var(--white); border: none; border-radius: var(--r-full); padding: 11px 26px; font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; transition: background var(--tr); }
+.res-btn-p:hover { background: var(--teal); }
+.res-btn-s { background: var(--sky); border: none; border-radius: var(--r-full); padding: 11px 26px; font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; color: var(--navy); transition: background var(--tr); }
+.res-btn-s:hover { background: #b8ccdc; }
+
+@media (max-width: 600px) {
+  .sim-bar { padding: 11px 14px; }
+  .sim-stage { padding: 18px 12px 120px; }
+  .cand-bubble { max-width: 90%; }
+  .ans-panel { padding: 10px 12px 16px; }
+  .ans-btn { font-size: 12.5px; }
+  .fb-card { padding: 18px 14px; }
+}
+</style>
+</head>
+<body>
+
+<!-- LANDING -->
+<div id="landing">
+  <div class="landing-header">
+    <h1>Тренажёр поведенческого интервью</h1>
+    <p>Три симулятора для отработки навыков проведения интервью по компетенциям. Выберите сценарий и потренируйтесь на разных типах кандидатов.</p>
+  </div>
+  <div class="sim-grid" id="sim-grid"></div>
+</div>
+
+<!-- SIMULATOR -->
+<div id="simulator">
+  <div class="sim-bar">
+    <button class="back-btn" onclick="toLanding()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 3L5 8l5 5"/></svg>
+      К выбору
+    </button>
+    <div class="bar-title" id="bar-title"></div>
+    <div class="prog-wrap">
+      <div class="prog-dots" id="prog-dots"></div>
+      <div class="mood g" id="mood">+</div>
+    </div>
+  </div>
+  <div class="sim-stage">
+    <div class="dialog" id="dialog"></div>
+  </div>
+  <div class="ans-panel" id="ans-panel">
+    <div class="ans-lbl">Выберите реплику</div>
+    <div class="ans-list" id="ans-list"></div>
+  </div>
+</div>
+
+<!-- FEEDBACK -->
+<div class="fb-overlay" id="fb-overlay">
+  <div class="fb-card">
+    <div class="fb-top">
+      <div class="fb-alex">
+        <img src="https://i.imgur.com/LzAv5VT.jpeg" alt="Алексей">
+        <span>Алексей</span>
+      </div>
+      <div class="fb-right">
+        <div class="fb-tag" id="fb-tag"></div>
+        <div class="fb-chosen" id="fb-chosen"></div>
+      </div>
+    </div>
+    <div class="fb-text" id="fb-text"></div>
+    <div class="fb-acts" id="fb-acts"></div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="result">
+  <div class="res-inner">
+    <div class="res-title" id="res-title"></div>
+    <div class="res-sub" id="res-sub"></div>
+    <div class="res-score"><span id="res-score">0</span> <span>/ 4 верных</span></div>
+    <div class="res-box">
+      <h3>Что вы сделали правильно</h3>
+      <ul id="res-list"></ul>
+    </div>
+    <div class="res-key" id="res-key"></div>
+    <div class="res-btns">
+      <button class="res-btn-s" onclick="restart()">Пройти снова</button>
+      <button class="res-btn-p" onclick="toLanding()">К другим симуляторам</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ALEXEY = "https://i.imgur.com/LzAv5VT.jpeg";
+const CAV = [
+  "https://i.imgur.com/NSSoTKb.jpeg",
+  "https://i.imgur.com/5oTX7w6.jpeg",
+  "https://i.imgur.com/dcAPk5U.jpeg"
+];
+
+const SIMS = [
+  {
+    num: "Симулятор 1",
+    title: "Кандидат уходит от ответа",
+    post: "Менеджер по продажам B2B",
+    comp: "Управление результатом",
+    task: "Удержать структуру интервью и получить поведенческие данные, не скатываясь в конфликт.",
+    resultSub: "Кандидат — менеджер по продажам B2B. Компетенция: управление результатом.",
+    correct: [
+      "Не сдались при первом уходе от ответа",
+      "Использовали нейтральные уточняющие вопросы",
+      "Дали кандидату время развернуть историю"
+    ],
+    key: "В начале кандидат был закрыт и давал социально желательные ответы. Но по мере того, как вы задавали нейтральные вопросы без давления, он становился всё более конкретным.",
+    steps: [
+      {
+        hint: "Помните принцип сопереживания: ваше поведение определяет поведение кандидата. Если вы давите — он закрывается. Если соглашаетесь с общими словами — вы теряете данные. Реагируйте нейтрально, но настойчиво возвращайте его к конкретике.",
+        cand: "Здравствуйте! Рад встрече. Я уверен, что мой опыт полностью соответствует вашей вакансии. Я всегда ответственно подхожу к работе и системно выполняю план.",
+        opts: [
+          { t: "Вы ведь всегда выполняете план продаж, да?", ok: false, fb: "Посмотрите на результат. Односложное «да». Поведенческих данных нет. Это произошло потому, что вы задали наводящий вопрос. Кандидат услышал, какой ответ вы хотите получить, и просто согласился." },
+          { t: "Расскажите о ситуации, когда план был под угрозой. Что именно вы сделали?", ok: true, fb: "Вы задали правильный вопрос, но кандидат снова ушёл в рассуждения о принципах. Он не привык к формату поведенческого интервью. Ваша задача — мягко, но настойчиво вернуть его к конкретике." },
+          { t: "Понятно. А какие у вас были должностные обязанности на прошлом месте?", ok: false, fb: "Посмотрите на результат. Кандидат перечислил обязанности. Это биографические данные, они не показывают, как человек действует в сложных ситуациях." },
+          { t: "То есть вы хотите сказать, что никогда не сталкивались с проблемами при выполнении плана?", ok: false, fb: "Посмотрите на реакцию кандидата. Он ушёл в защиту и начал давать ещё более абстрактные ответы. Это произошло потому, что ваша реплика прозвучала как вызов и сомнение." }
+        ]
+      },
+      {
+        hint: null,
+        cand: "Ну, вообще план — это святое. Я всегда стараюсь выполнять план, потому что понимаю, что от этого зависит и мой доход, и результат компании. В моей практике было много разных ситуаций, но я всегда подхожу к работе ответственно. Главное — это системность и дисциплина.",
+        opts: [
+          { t: "Понятно. А можете привести конкретный пример из вашего опыта?", ok: true, fb: "Отлично. Кандидат начал рассказывать, но ситуация (S) размыта. Нет задачи, действий и результата. Ваша задача — помочь ему детализировать историю." },
+          { t: "То есть вы хотите сказать, что всегда выполняли план?", ok: false, fb: "Посмотрите на реакцию. Кандидат ушёл в ещё большую абстракцию и начал защищаться. Это произошло потому, что ваша реплика прозвучала как сомнение." },
+          { t: "Хорошо, это правильные принципы. Давайте перейдём к другой компетенции.", ok: false, fb: "Посмотрите на реакцию. Кандидат согласился с вами и продолжил давать общие слова. Поведенческих данных нет." },
+          { t: "Вы ведь всегда справлялись с планом, да?", ok: false, fb: "Посмотрите на реакцию. Односложное «да». Поведенческих данных нет. Это произошло потому, что вы задали наводящий вопрос." }
+        ]
+      },
+      {
+        hint: null,
+        cand: "Ну... да, конечно. Был один случай, кажется, в прошлом году. У нас был сложный квартал, если не ошибаюсь, третий. Рынок просел, клиенты стали осторожнее. План был под угрозой, это точно.",
+        opts: [
+          { t: "Понял. А что именно вы сделали в той ситуации?", ok: false, fb: "Посмотрите на ответ. Действия размыты: «больше работал», «старался». Нет конкретики. Вы слишком быстро перескочили к действиям." },
+          { t: "Расскажите подробнее: в какой момент вы поняли, что план под угрозой? Что именно вы увидели в показателях?", ok: true, fb: "Отлично. Появилась конкретика: когда, что увидел, как отслеживал. Это подтверждение индикатора «еженедельно сверяется с показателями»." },
+          { t: "Это была ваша вина, что план был под угрозой?", ok: false, fb: "Посмотрите на реакцию. Кандидат перешёл в защиту и начал объяснять всё внешними факторами. Поведенческих данных нет — только оправдания." },
+          { t: "А какой у вас был план в количественном выражении?", ok: false, fb: "Посмотрите на ответ. Он назвал цифру, но не рассказал, как действовал. Поведенческих данных нет." }
+        ]
+      },
+      {
+        hint: null,
+        cand: "Ну... я помню, что в середине октября посмотрел свои показатели — а я еженедельно сверяюсь с планом — и увидел, что отстаю на 30 процентов. До конца квартала полтора месяца, а у меня только 70 процентов выполнения. Вот тогда я понял, что нужно что-то менять.",
+        opts: [
+          { t: "Спасибо за подробный рассказ. Давайте перейдём к следующему вопросу.", ok: true, fb: "Отлично. Нейтральное, профессиональное завершение этапа. Вы поблагодарили за рассказ, но не дали оценки. Это сохраняет безопасность." },
+          { t: "Отлично! Вы точно справились с этой ситуацией.", ok: false, fb: "Посмотрите на реакцию. Кандидат расслабился и перестал быть точным. Это произошло потому, что вы дали позитивную оценку." },
+          { t: "Наконец-то вы рассказали конкретный пример.", ok: false, fb: "Посмотрите на реакцию. Кандидат начал оправдываться и чувствовать себя неуверенно. Это произошло потому, что вы оценили его предыдущие ответы." },
+          { t: "Понятно. Следующий вопрос.", ok: false, fb: "Посмотрите на реакцию. Кандидат напрягся. Это произошло потому, что ваше завершение было слишком резким." }
+        ]
+      }
+    ]
+  },
+  {
+    num: "Симулятор 2",
+    title: "Кандидат нервничает",
+    post: "Аналитик данных",
+    comp: "Аналитическое мышление",
+    task: "Снизить тревогу кандидата, создать безопасную атмосферу и получить поведенческие данные.",
+    resultSub: "Кандидат — аналитик данных. Компетенция: аналитическое мышление.",
+    correct: [
+      "Снизили тревогу в начале",
+      "Игнорировали извинения",
+      "Структурировали вопросы",
+      "Управляли темпом"
+    ],
+    key: "В начале кандидат был напряжён и давал размытые ответы. Но по мере того, как вы создавали безопасную атмосферу и структурировали вопросы, он становился всё более уверенным.",
+    steps: [
+      {
+        hint: "Помните: чем больше кандидат нервничает, тем менее конкретны его ответы. Сначала безопасность — потом данные. Ваша задача — не усугубить тревогу, а снизить её.",
+        cand: "Здравствуйте! Ой, ну... вообще, у меня было много разных задач... Я, наверное, не знаю, с какого случая начать... Извините, я немного нервничаю. У нас в компании было много проектов, и все были сложные...",
+        opts: [
+          { t: "Ничего страшного, не торопитесь. Возьмите время подумать. Можете начать с любого случая.", ok: true, fb: "Кандидат начал успокаиваться. Появилась конкретная ситуация, но он всё ещё извиняется и сбивается. Ваша задача — игнорировать извинения и структурировать его рассказ." },
+          { t: "Давайте конкретнее. Выберите один случай и расскажите о нём.", ok: false, fb: "Посмотрите на реакцию. Кандидат ещё больше нервничает. Это произошло потому, что вы оказали давление." },
+          { t: "Понятно. Давайте тогда перейдём к другому вопросу.", ok: false, fb: "Посмотрите на реакцию. Кандидат растерялся ещё больше. Это произошло потому, что вы ушли от вопроса из-за его тревоги." },
+          { t: "Вы ведь работали со сложными задачами, да? Просто выберите любую.", ok: false, fb: "Посмотрите на результат. Односложное «да». Поведенческих данных нет. Это произошло потому, что вы задали наводящий вопрос." }
+        ]
+      },
+      {
+        hint: null,
+        cand: "Спасибо... Хорошо, давайте подумаем. Наверное, могу рассказать про проект с маркетингом. Они попросили проанализировать отток клиентов. Это было... кажется, в начале этого года. Извините, я точно не помню дату.",
+        opts: [
+          { t: "Не извиняйтесь, всё нормально. Расскажите, что вы делали.", ok: false, fb: "Посмотрите на ответ. Кандидат пытается не извиняться, но всё ещё нервничает. Это произошло потому, что вы акцентировали внимание на его тревоге." },
+          { t: "Отлично, это хорошая ситуация. А какая именно задача стояла перед вами?", ok: true, fb: "Отлично. Вы поддержали кандидата и перевели фокус на задачу (T). Кандидат начинает говорить более уверенно." },
+          { t: "А какой был бюджет проекта?", ok: false, fb: "Посмотрите на ответ. Он назвал цифру, но не рассказал, как действовал. Поведенческих данных нет." },
+          { t: "Вы ведь справились с этой задачей, да?", ok: false, fb: "Посмотрите на результат. Односложное «да». Поведенческих данных нет." }
+        ]
+      },
+      {
+        hint: null,
+        cand: "Ну... задача была понять, почему клиенты уходят. Маркетинг хотел получить рекомендации, как снизить отток. Я должен был... то есть мне нужно было проанализировать данные по клиентам, которые ушли за последние полгода, и найти закономерности.",
+        opts: [
+          { t: "Расскажите пошагово: как именно вы проводили этот анализ?", ok: true, fb: "Отлично! Конкретные, пошаговые действия. Кандидат говорит всё более уверенно, потому что структура вашего вопроса помогла ему структурировать ответ." },
+          { t: "Говорите медленнее, я не успеваю записывать.", ok: false, fb: "Посмотрите на реакцию. Кандидат снова начал извиняться и сбиваться. Это произошло потому, что вы раскритиковали его темп." },
+          { t: "Вы ведь использовали машинное обучение, да?", ok: false, fb: "Посмотрите на результат. Односложное «да». Поведенческих данных нет." },
+          { t: "А что получилось в итоге?", ok: false, fb: "Посмотрите на ответ. Кандидат дал результат, но вы пропустили элемент A (действия)." }
+        ]
+      },
+      {
+        hint: null,
+        cand: "Ну, первое, что я сделал — выгрузил данные по всем клиентам, которые ушли за последние полгода. Это было около 500 клиентов. Потом я посмотрел на их характеристики: возраст, регион, продукт. Потом я сравнил их с теми, кто остался, и искал различия.",
+        opts: [
+          { t: "Какой был результат?", ok: true, fb: "Отлично. Короткий, нейтральный вопрос. Кандидат дал полный STAR-ответ. Вы не дали оценок, не прокомментировали его состояние." },
+          { t: "Отлично! А что получилось в итоге?", ok: false, fb: "Посмотрите на ответ. Результат стал размытым. Кандидат расслабился и перестал быть точным." },
+          { t: "Хорошо. Я вижу, что вы нервничали в начале, но сейчас уже лучше.", ok: false, fb: "Посмотрите на реакцию. Кандидат снова начал извиняться. Это произошло потому, что вы акцентировали внимание на его тревоге." },
+          { t: "Понятно. Следующий вопрос.", ok: false, fb: "Посмотрите на реакцию. Кандидат напрягся. Это произошло потому, что ваше завершение было слишком резким." }
+        ]
+      }
+    ]
+  },
+  {
+    num: "Симулятор 3",
+    title: "Социально желательные ответы",
+    post: "Руководитель проекта",
+    comp: "Влияние без полномочий",
+    task: "Распознать социально желательные ответы и перевести разговор от теории к практике.",
+    resultSub: "Кандидат — руководитель проекта. Компетенция: влияние без полномочий.",
+    correct: [
+      "Не сдались при первом социально желательном ответе",
+      "Не давали оценок в процессе интервью",
+      "Задавали структурированные уточняющие вопросы",
+      "Не давали наводящих вопросов"
+    ],
+    key: "В начале кандидат давал социально желательные ответы. Но по мере того, как вы задавали структурированные уточняющие вопросы, он понял, что эта стратегия не работает, и перешёл к конкретике.",
+    steps: [
+      {
+        hint: "Помните: социально желательный ответ — это всегда общие слова и теория. Ваша задача — не поймать кандидата на лжи, а настойчиво, но нейтрально возвращать его к конкретным примерам.",
+        cand: "Здравствуйте! Влияние без полномочий — это одна из ключевых компетенций современного руководителя. Я всегда стараюсь выстраивать отношения с участниками команды на основе доверия и взаимного уважения. Важно понимать мотивацию каждого человека.",
+        opts: [
+          { t: "Понятно. А можете привести конкретный пример из вашего опыта?", ok: true, fb: "Кандидат начал рассказывать, но ситуация размыта. Он всё ещё может уйти в общие слова. Опытный кандидат особенно чувствителен к уточняющим вопросам." },
+          { t: "То есть вы считаете, что всегда выстраивали отношения на основе доверия?", ok: false, fb: "Посмотрите на реакцию. Кандидат ушёл в ещё большую абстракцию и начал защищаться." },
+          { t: "Хорошо, это правильные принципы. Давайте перейдём к другому вопросу.", ok: false, fb: "Посмотрите на реакцию. Кандидат согласился с вами и продолжил давать общие слова. Поведенческих данных нет." },
+          { t: "Вы ведь всегда добивались того, что команда работала слаженно, да?", ok: false, fb: "Посмотрите на результат. Односложное «да». Поведенческих данных нет." }
+        ]
+      },
+      {
+        hint: null,
+        cand: "Ну... да, конечно. Был один случай... кажется, в прошлом году. У нас был проект по запуску нового продукта. Один из разработчиков... кажется, из бэкенд-команды... не укладывался в сроки по своему модулю.",
+        opts: [
+          { t: "Понял. А что именно вы сделали в той ситуации?", ok: false, fb: "Посмотрите на ответ. Действия размыты: «поговорил», «выяснил», «помог». Нет конкретики." },
+          { t: "Расскажите подробнее: в какой момент вы поняли, что разработчик не укладывается в сроки? Что именно вы увидели?", ok: true, fb: "Отлично! Появилась конкретика: когда, что увидел, как проверил. Опытный кандидат дал факты." },
+          { t: "А какой был срок у этого модуля?", ok: false, fb: "Посмотрите на ответ. Он назвал срок, но не рассказал, как действовал. Поведенческих данных нет." },
+          { t: "Вы ведь заметили проблему вовремя, да?", ok: false, fb: "Посмотрите на результат. Односложное «да». Поведенческих данных нет." }
+        ]
+      },
+      {
+        hint: null,
+        cand: "Ну... я помню, что у нас был еженедельный статус-митинг. Мы смотрели прогресс по задачам в Jira. И я увидел, что задача этого разработчика уже неделю висит в статусе «в работе», но прогресса нет. Я посмотрел его коммиты — их тоже не было.",
+        opts: [
+          { t: "Расскажите пошагово: какие конкретные шаги вы предприняли после того, как обнаружили проблему?", ok: true, fb: "Отлично! Конкретные, пошаговые действия. Опытный кандидат дал реальные детали, потому что ваш вопрос не оставил ему пространства для общих фраз." },
+          { t: "И что вы сделали?", ok: false, fb: "Посмотрите на ответ. Действия размыты: «поговорил», «выяснил», «помог». Нет конкретики." },
+          { t: "Вы ведь поговорили с ним лично, да?", ok: false, fb: "Посмотрите на результат. Односложное «да». Поведенческих данных нет." },
+          { t: "А руководитель разработчика был в курсе?", ok: false, fb: "Посмотрите на ответ. Он рассказал, что руководитель был в курсе, но не рассказал, что делал сам кандидат." }
+        ]
+      },
+      {
+        hint: null,
+        cand: "Ну, первое, что я сделал — назначил встречу один на один с этим разработчиком. Не на статусе, а именно личную встречу. Я хотел поговорить без свидетелей. На встрече я не стал его обвинять, а просто спросил: «Что происходит? Чем я могу помочь?»",
+        opts: [
+          { t: "Какой был результат?", ok: true, fb: "Отлично. Короткий, нейтральный вопрос. Кандидат дал полный STAR-ответ с измеримым результатом." },
+          { t: "Вот это уже конкретный пример! Наконец-то вы перешли от теории к практике.", ok: false, fb: "Посмотрите на реакцию. Кандидат напрягся и стал менее точным. Это произошло потому, что вы оценили его предыдущие ответы." },
+          { t: "Хорошо. Я вижу, что сначала вы давали общие ответы, но теперь всё конкретнее.", ok: false, fb: "Посмотрите на реакцию. Кандидат начал оправдываться. Это произошло потому, что вы акцентировали внимание на его социально желательных ответах." },
+          { t: "Понятно. Следующий вопрос.", ok: false, fb: "Посмотрите на реакцию. Кандидат напрягся. Это произошло потому, что ваше завершение было слишком резким." }
+        ]
+      }
+    ]
+  }
+];
+
+// State
+let curSim = 0, curStep = 0, score = 0, done = [];
+
+// Build landing cards
+const grid = document.getElementById('sim-grid');
+SIMS.forEach((s, i) => {
+  const card = document.createElement('div');
+  card.className = 'sim-card';
+  card.onclick = () => startSim(i);
+  card.innerHTML = `
+    <div class="card-top">
+      <img class="card-avatar" src="${CAV[i]}" alt="Кандидат ${i+1}">
+      <div class="card-label">
+        <span class="card-num">${s.num}</span>
+        <div class="card-title">${s.title}</div>
+      </div>
+    </div>
+    <div class="card-meta">
+      <div class="card-meta-row"><b>Должность:</b> ${s.post}</div>
+      <div class="card-meta-row"><b>Компетенция:</b> ${s.comp}</div>
+    </div>
+    <div class="card-task"><b>Задача:</b> ${s.task}</div>
+    <button class="card-btn" onclick="event.stopPropagation();startSim(${i})">Начать</button>
+  `;
+  grid.appendChild(card);
+});
+
+function toLanding() {
+  document.getElementById('landing').style.display = 'flex';
+  document.getElementById('simulator').className = '';
+  document.getElementById('simulator').style.display = 'none';
+  document.getElementById('result').className = '';
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('fb-overlay').className = 'fb-overlay';
+}
+
+function startSim(idx) {
+  curSim = idx; curStep = 0; score = 0; done = [];
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('result').className = '';
+  document.getElementById('result').style.display = 'none';
+  const el = document.getElementById('simulator');
+  el.style.display = 'flex';
+  el.className = 'on';
+  document.getElementById('bar-title').textContent = SIMS[idx].num + ': ' + SIMS[idx].title;
+  renderStep();
+}
+
+function restart() { startSim(curSim); }
+
+function renderStep() {
+  const sim = SIMS[curSim];
+  const step = sim.steps[curStep];
+  const dlg = document.getElementById('dialog');
+  dlg.innerHTML = '';
+
+  // Dots
+  const dots = document.getElementById('prog-dots');
+  dots.innerHTML = '';
+  sim.steps.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'prog-dot' + (i < done.length ? (done[i] ? ' g' : ' r') : i === curStep ? ' y' : '');
+    dots.appendChild(d);
+  });
+
+  // Mood
+  const mood = document.getElementById('mood');
+  const r = done.length ? score / done.length : 1;
+  mood.className = 'mood ' + (r >= .7 ? 'g' : r >= .4 ? 'y' : 'r');
+  mood.textContent = r >= .7 ? '+' : r >= .4 ? '~' : '-';
+
+  // Step label
+  const lbl = document.createElement('div');
+  lbl.className = 'step-lbl';
+  lbl.textContent = `Шаг ${curStep + 1} из ${sim.steps.length}`;
+  dlg.appendChild(lbl);
+
+  // Hint (only if present)
+  if (step.hint) {
+    const hint = document.createElement('div');
+    hint.className = 'hint-wrap';
+    hint.innerHTML = `<img class="hint-av" src="${ALEXEY}" alt="Алексей"><div class="hint-body"><div class="hint-name">Алексей — HR-консультант</div>${step.hint}</div>`;
+    dlg.appendChild(hint);
+    requestAnimationFrame(() => setTimeout(() => hint.classList.add('vis'), 80));
+  }
+
+  // Candidate bubble
+  const crow = document.createElement('div');
+  crow.className = 'cand-row';
+  crow.innerHTML = `<div class="cand-bubble">${step.cand}</div><img class="cand-av" src="${CAV[curSim]}" alt="Кандидат">`;
+  dlg.appendChild(crow);
+  requestAnimationFrame(() => setTimeout(() => crow.classList.add('vis'), step.hint ? 240 : 80));
+
+  // Answers
+  const list = document.getElementById('ans-list');
+  list.innerHTML = '';
+  step.opts.forEach((o, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'ans-btn';
+    btn.innerHTML = `<span class="ans-num">${i+1}</span><span>${o.t}</span>`;
+    btn.onclick = () => pick(i);
+    list.appendChild(btn);
+  });
+  setPanel(true);
+}
+
+function setPanel(on) {
+  const p = document.getElementById('ans-panel');
+  p.style.opacity = on ? '1' : '0.4';
+  p.style.pointerEvents = on ? 'auto' : 'none';
+}
+
+function pick(idx) {
+  const opt = SIMS[curSim].steps[curStep].opts[idx];
+  setPanel(false);
+
+  const tag = document.getElementById('fb-tag');
+  const chosen = document.getElementById('fb-chosen');
+  const txt = document.getElementById('fb-text');
+  const acts = document.getElementById('fb-acts');
+
+  tag.className = opt.ok ? 'fb-tag ok' : 'fb-tag err';
+  tag.innerHTML = opt.ok
+    ? `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8l4 4 6-7"/></svg>Верный выбор`
+    : `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4l8 8M12 4l-8 8"/></svg>Не оптимально`;
+
+  chosen.textContent = `"${opt.t}"`;
+  txt.textContent = opt.fb;
+  acts.innerHTML = '';
+
+  const isLast = curStep === SIMS[curSim].steps.length - 1;
+
+  if (opt.ok) {
+    const nb = document.createElement('button');
+    nb.className = 'fb-next';
+    nb.textContent = isLast ? 'Посмотреть итог' : 'Следующий шаг';
+    nb.onclick = () => { closeOv(); advance(true); };
+    acts.appendChild(nb);
+  } else {
+    const rb = document.createElement('button');
+    rb.className = 'fb-retry';
+    rb.textContent = 'Попробовать другую реплику';
+    rb.onclick = () => { closeOv(); setPanel(true); };
+    const sb = document.createElement('button');
+    sb.className = 'fb-next';
+    sb.textContent = isLast ? 'Завершить' : 'Перейти к следующему шагу';
+    sb.onclick = () => { closeOv(); advance(false); };
+    acts.appendChild(rb);
+    acts.appendChild(sb);
+  }
+
+  document.getElementById('fb-overlay').classList.add('vis');
+}
+
+function closeOv() { document.getElementById('fb-overlay').classList.remove('vis'); }
+
+function advance(wasOk) {
+  done.push(wasOk);
+  if (wasOk) score++;
+  curStep++;
+  if (curStep >= SIMS[curSim].steps.length) showResult();
+  else renderStep();
+}
+
+function showResult() {
+  const sim = SIMS[curSim];
+  document.getElementById('simulator').className = '';
+  document.getElementById('simulator').style.display = 'none';
+  const rs = document.getElementById('result');
+  rs.style.display = 'flex';
+  rs.className = 'on';
+  document.getElementById('res-title').textContent = sim.num + ' завершён';
+  document.getElementById('res-sub').textContent = sim.resultSub;
+  document.getElementById('res-score').textContent = score;
+  document.getElementById('res-list').innerHTML = sim.correct.map(t => `<li>${t}</li>`).join('');
+  document.getElementById('res-key').innerHTML = `<b>Ключевой принцип:</b> ${sim.key}`;
+}
+</script>
+</body>
+</html>
